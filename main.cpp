@@ -1,19 +1,18 @@
-#include "tree.cpp"
+#include <cstdlib>
+#include <vector>
+#include <iostream>
+#include <assert.h>
+#include "point.hpp"
+#include "segment.hpp"
+#include "bentley_ottmann.hpp"
 
+// Define our template class for the red black tree
+int main(){
+    RedBlackTree<float> tree;
 
-
-int main() {
-  RedBlackTree bst;
-  bst.insert(55);
-  bst.insert(40);
-  bst.insert(65);
-  bst.insert(60);
-  bst.insert(75);
-  bst.insert(57);
-
-  bst.printTree();
-  cout << endl
-     << "After deleting" << endl;
-  bst.deleteNode(40);
-  bst.printTree();
+    for (float i = 1; i < 15; i++){
+        tree.insert((float) i);
+    }
+    tree.printTree();
+    return 0;
 }
