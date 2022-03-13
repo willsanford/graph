@@ -11,13 +11,12 @@ template<typename T>
 class Node {
     private:
         T data;
-        Node *parent;
-        Node *left;
-        Node *right;
-        color_t color;
+        Node<T> *parent = nullptr;
+        Node<T> *left = nullptr;
+        Node<T> *right = nullptr;
+        color_t color = red;
     public:
         //Constructors
-        Node(T key, color_t color);
         Node(T key);
 
         // Getters
@@ -29,14 +28,18 @@ class Node {
 
         // Setters
         void setData(T a){data = a;}
-        void setParent(Node* a){parent = a;}
-        void setLeft(Node* a){left = a;}
-        void setRight(Node* a){right = a;}
+        void setParent(Node<T>* a){parent = a;}
+        void setLeft(Node<T>* a){left = a;}
+        void setRight(Node<T>* a){right = a;}
         void setColor(color_t a){color = a;}
 
         bool hasRight();
         bool hasLeft();
         bool hasParent();
+
+        void flipColor();
+        bool isLeftChild();
+        bool isRightChild();
 
         // Operator Overloading
         inline bool operator==(const Node& l){
@@ -45,37 +48,46 @@ class Node {
 };
 
 template<typename T>
-Node<T>::Node(T key, color_t init_color){
+Node<T>::Node(T key) {
     data = key;
-    color = init_color;
-    parent = nullptr;
-    left = nullptr;
-    right = nullptr;
-}
-
-template<typename T>
-Node<T>::Node(T key){
-    data = key;
-    color = black;
-    parent = nullptr;
-    left = nullptr;
-    right = nullptr;
 }
 
 template<typename T>
 bool Node<T>::hasRight(){
-    return this->right != nullptr;
+    return !(this->right == nullptr);
 }
 
 
 template<typename T>
 bool Node<T>::hasLeft(){
-    return this->left != nullptr;
+    return !(this->left == nullptr);
 }
 
 template<typename T>
 bool Node<T>::hasParent(){
-    return this->parent != nullptr;
+    return !(this->parent == nullptr);
 }
 
+template<typename T>
+void Node<T>::flipColor() {
+    if (this->color == red){
+        this->color = black;
+    }else{
+        this->color = red;
+    }
+}
+
+template<typename T>
+bool Node<T>::isLeftChild() {
+    if (!this->parent->hasLeft()){return false;}
+    if (this == this->parent->getLeft()){ return true;}
+    return false;
+}
+
+template<typename T>
+bool Node<T>::isRightChild(){
+    if (!this->parent->hasRight()){return false;}
+    if (this == this->parent->getRight()){ return true;}
+    return false;
+}
 #endif //GRAPH_NODE_HPP

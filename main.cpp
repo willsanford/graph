@@ -8,11 +8,14 @@
 
 // Define our template class for the red black tree
 int main(){
-    RedBlackTree<float> tree;
+    RedBlackTree<int> tree;
 
-    for (float i = 1; i < 15; i++){
-        tree.insert((float) i);
+    for (int i = 1; i < 15; i++){
+        tree.insert( i);
     }
     tree.printTree();
+
+    Node<int>* node = tree.searchTree(2);
+    std::cout << node->getData() << std::endl;
     return 0;
 }

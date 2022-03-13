@@ -6,57 +6,30 @@
 
 template<typename T>
 RedBlackTree<T>::RedBlackTree() {
-    // Initially make all the elements in the tree empty
     root = nullptr;
 };
 
-
-/*
- * Return the null tree leaf
- */
-template<typename T>
-Node<T>& RedBlackTree<T>::getNull() {
-    return *TNULL;
-}
-
 template<typename T>
 void RedBlackTree<T>::insert(T key) {
-    // If there are no nodes in the tree yet, insert the key into the root
-    Node<T>* to_insert = new Node<T>(key, red);
-
-    if (root == nullptr) {
-        to_insert->setColor(black);
-        root = to_insert;
-        return;
-    }
-
-    // The tree has nodes in it.
-    // Start by finding the appropriate leaf nodes
-    Node<T>* current = root;
-    while (true){
-        if (current->getData() > key){
-            if (!current->hasRight()){
-                current->setRight(to_insert);
-                to_insert->setParent(current);
-                break;
-            }
-            current = current->getRight();
-        }else{
-            if (!current->hasLeft()){
-                current->setLeft(to_insert);
-                to_insert->setParent(current);
-                break;
-            }
-            current = current->getLeft();
-        }
-    }
-    // Start checking for imbalances
-
-    // If the inserted nodes parent if black
-    std::cout << "Inserting " << to_insert->getData() << "." << std::endl;
-    insertFix(to_insert);
-    std::cout << "Fixing " << to_insert->getData() << "." << std::endl;
+    Node<T>* node = new Node<T>(key);
+    root = insert(root, node);
+    recolorAndRotate(node);
 };
+
+template<typename T>
+Node<T>* RedBlackTree<T>::insert(Node<T>* node, Node<T>* nodeToInsert){
+    if (node == nullptr){
+        return nodeToInsert;
+    }
+    if (nodeToInsert->getData() < node->getData()){
+        node->setLeft(insert(node->getLeft(), nodeToInsert));
+        node->getLeft()->setParent(node);
+    }else if (nodeToInsert->getData() > node->getData()){
+        node->setRight(insert(node->getRight(), nodeToInsert));
+        node->getRight()->setParent(node);
+    }
+    return node;
+}
 
 /*
  * Search the tree. If the key does not exist, then return none
@@ -64,12 +37,10 @@ void RedBlackTree<T>::insert(T key) {
 template<typename T>
 Node<T>* RedBlackTree<T>::searchTree(T k) {
     Node<T>* to_return = root;
-
     // Trivial Case
     if (to_return == nullptr || to_return->getData() == k){
         return root;
     }
-
     while(to_return != nullptr) {
         if (to_return->getData() == k){
             return to_return;
@@ -80,113 +51,113 @@ Node<T>* RedBlackTree<T>::searchTree(T k) {
 }
 
 template<typename T>
-void RedBlackTree<T>::leftRotate(Node<T>* x){
-    Node<T>* y = x->getRight();
-    x->setRight(y->getLeft());
-
-    if (!y->hasLeft()){
-        y->getLeft()->setParent(x);
+void RedBlackTree<T>::rightRotate(Node<T>* node) {
+    Node<T>* leftNode = node->getLeft();
+    node->setLeft(leftNode->getRight());
+    if (node->hasLeft()){
+        node->getLeft()->setParent(node);
     }
-    y->setParent(x->getParent());
-
-    if (!x->hasParent()){
-        root = y;
-    }else if (x == x->getParent()->getLeft()){
-        x->getParent()->setLeft(y);
-    }else{
-        x->getParent()->setRight(y);
-    }
-
-    y->setLeft(x);
-    x->setParent(y);
+    leftNode->setRight(node);
+    leftNode->setParent(node->getParent());
+    updateChildOfParent(node, leftNode);
+    node->setParent(leftNode);
 }
 
 template<typename T>
-void RedBlackTree<T>::rightRotate(Node<T>* x) {
-    Node<T>* y = x->getLeft();
-    x->setLeft(y->getRight());
-
-    if (!y->hasRight()){
-        y->getRight()->setParent(x);
+void RedBlackTree<T>::leftRotate(Node<T>* node){
+    Node<T>* rightNode = node->getRight();
+    node->setRight(rightNode->getLeft());
+    if (node->hasRight()){
+        node->getRight()->setParent(node);
     }
-    y->setParent(x->getParent());
-
-    if (!x->hasParent()){
-        root = y;
-    }else if (x == x->getParent()->getRight()){
-        x->getParent()->setRight(y);
-    }else{
-        x->getParent()->setLeft(y);
-    }
-
-    y->setRight(x);
-    x->setParent(y);
-}
+    rightNode->setLeft(node);
+    rightNode->setParent(node->getParent());
+    updateChildOfParent(node, rightNode);
+    node->setParent(rightNode);
+};
 
 template<typename T>
-void RedBlackTree<T>::insertFix(Node<T>* k){
-    if (!k->hasParent() || !k->getParent()->hasParent()){return;}
+void RedBlackTree<T>::updateChildOfParent(Node<T>* node, Node<T>* tempNode){
+    if (!node->hasParent()){
+        root = tempNode;
+    }else if (node->isLeftChild()){
+        node->getParent()->setLeft(tempNode);
+    } else{
+        node->getParent()->setRight(tempNode);
+    }
+}
+template<typename T>
+void RedBlackTree<T>::recolorAndRotate(Node<T>* node){
+    Node<T>* parent = node->getParent();
 
-    while(k->getParent()->getColor() == red){
-        if (k->getParent() == k->getParent()->getParent()->getLeft()){
-            Node<T>* y = k->getParent()->getParent()->getRight();
-            if (y->getColor() == red) {
-                k->getParent()->setColor(black);
-                y->setColor(black);
-                k->getParent()->getParent()->setColor(red);
-                k = k->getParent()->getParent();
-            }else{
-                if (k == k->getParent()->getRight()){
-                    k->setParent(k);
-                    leftRotate(k);
-                }
-                k->getParent()->setColor(black);
-                k->getParent()->getParent()->setColor(red);
-                rightRotate(k);
-            }
-        }else{
-            Node<T>* y = k->getParent()->getParent()->getLeft();
-            if (y->getColor() == red) {
-                k->getParent()->setColor(black);
-                y->setColor(black);
-                k->getParent()->getParent()->setColor(red);
-                k = k->getParent()->getParent();
-            }else{
-                if (k == k->getParent()->getLeft()){
-                    k->setParent(k);
-                    rightRotate(k);
-                }
-                k->getParent()->setColor(black);
-                k->getParent()->getParent()->setColor(red);
-                leftRotate(k);
-            }
+    if(node != root && parent->getColor() == red) {
+        Node<T> *grandparent = parent->getParent();
+        Node<T> *uncle = parent->isLeftChild() ? grandparent->getRight() : grandparent->getLeft();
+
+        if (uncle != nullptr && uncle->getColor() == red) {
+            handleRecoloring(parent, uncle, grandparent);
+        } else if (parent->isLeftChild()) {
+            handleLeftSituations(node, parent, grandparent);
+        } else if (!parent->isLeftChild()) {
+            handleRightSituations(node, parent, grandparent);
         }
     }
     root->setColor(black);
 }
-
 template<typename T>
-void RedBlackTree<T>::printTree() {
-    if (root != nullptr) {
-        printHelper(root, "", true);
-    }
+void RedBlackTree<T>::handleRecoloring(Node<T>* parent, Node<T>* uncle, Node<T>* grandparent){
+    uncle->flipColor();
+    parent->flipColor();
+    grandparent->flipColor();
+    recolorAndRotate(grandparent);
+
 }
 
 template<typename T>
-void RedBlackTree<T>::printHelper(Node<T>* root, std::string indent, bool last) {
-    if (root != nullptr) {
-        std::cout << indent;
-        if (last) {
-            std::cout << "R----";
-            indent += "   ";
-        } else {
-            std::cout << "L----";
-            indent += "|  ";
-        }
+void RedBlackTree<T>::handleRightSituations(Node<T>* node, Node<T>* parent, Node<T>* grandparent){
+    if (node->isLeftChild()){
+        rightRotate(parent);
+    }
+    parent->flipColor(); // swap colors
+    grandparent->flipColor();
+    leftRotate(grandparent);
+    recolorAndRotate(node->isLeftChild() ? grandparent : parent);
+}
 
-        std::string sColor = root->getColor() ? "RED" : "BLACK";
-        std::cout << root->getData() << "(" << sColor << ")" << std::endl;
-        printHelper(root->getLeft(), indent, false);
-        printHelper(root->getRight(), indent, true);
+template<typename T>
+void RedBlackTree<T>::handleLeftSituations(Node<T>* node, Node<T>* parent, Node<T>* grandparent){
+    if (!node->isLeftChild()){
+        leftRotate(parent);
+    }
+    parent->flipColor(); // swap colors
+    grandparent->flipColor();
+    rightRotate(grandparent);
+    recolorAndRotate(node->isLeftChild() ? parent : grandparent);
+}
+
+template<typename T>
+void RedBlackTree<T>::printTree() {
+    if (root == nullptr){return;}
+    printHelper(root, 1);
+}
+
+template<typename T>
+void RedBlackTree<T>::printHelper(Node<T>* node, int depth) {
+
+    std::cout << "Depth: " << depth << "| Data: " << node->getData() << "| Parent: ";
+    if (node->hasParent()){
+        std::cout << node->getParent()->getData();
+    }else{
+        std::cout << "Null";
+    }
+    std::cout << "| Color: " << ((node->getColor() == red) ? "red" : "black");
+    std::cout << std::endl;
+
+    if (node->hasLeft()){
+        printHelper(node->getLeft(), depth+1);
+    }
+
+    if (node->hasRight()){
+        printHelper(node->getRight(), depth+1);
     }
 }
