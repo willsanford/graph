@@ -8,14 +8,17 @@
 
 // Define our template class for the red black tree
 int main(){
-    RedBlackTree<int> tree;
+    RedBlackTree<int>* tree = new RedBlackTree<int>;
 
     for (int i = 1; i < 15; i++){
-        tree.insert( i);
+        tree->insert( i);
     }
-    tree.printTree();
+    std::vector<Node<int>*> nodes = tree->getAllNodes();
 
-    Node<int>* node = tree.searchTree(2);
-    std::cout << node->getData() << std::endl;
+    for (Node<int>* node: nodes){
+        std::cout << node->getData() << std::endl;
+    }
+
+    delete tree;
     return 0;
 }

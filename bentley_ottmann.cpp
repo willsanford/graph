@@ -30,10 +30,13 @@ struct eventPoint{
     }
 };
 
-std::vector<Point> bentley_ottmann(std::vector<Segment>& segments){
-    std::vector<Point> intersections = std::vector<Point>();
-
-    // For each intersection, add an event point for both endpoints
-    intersections.push_back(Point(0,0));
-    return intersections;
-};
+//std::vector<Point> bentley_ottmann(std::vector<Segment>& segments){
+//    std::vector<Point> intersections = std::vector<Point>();
+//
+//    // For each intersection, add an event point for both endpoints
+//    intersections.push_back(Point(0,0));
+//
+//
+////    RedBlackTree<eventPoint> eventTree = RedBlackTree<eventPoint>();
+//    return intersections;
+//};

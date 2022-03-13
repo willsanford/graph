@@ -2,12 +2,49 @@
 
 #include <iostream>
 #include <string>
+#include <stack>
 #include "tree.hpp"
 
 template<typename T>
 RedBlackTree<T>::RedBlackTree() {
     root = nullptr;
 };
+
+template<typename T>
+RedBlackTree<T>::~RedBlackTree() {
+    if (root == nullptr){ return;}
+    // Get an array to all the pointers in the tree
+    std::vector<Node<T>*> pointers = getAllNodes();
+
+    for (Node<T>* pointer: pointers){
+        delete pointer;
+    }
+}
+
+template<typename T>
+std::vector<Node<T>*> RedBlackTree<T>::getAllNodes(){
+    std::vector<Node<T>*> pointers;
+    std::vector<Node<T>*> to_traverse;
+
+    if (root == nullptr) {return pointers;}
+
+    to_traverse.push_back(root);
+    while(!to_traverse.empty()){
+        Node<T>* current = to_traverse.back();
+        to_traverse.pop_back();
+        if (current)
+        pointers.push_back(current);
+
+        if (current->hasLeft()){
+            to_traverse.push_back(current->getLeft());
+        }
+        if (current->hasRight()){
+            to_traverse.push_back(current->getRight());
+        }
+    }
+
+    return pointers;
+}
 
 template<typename T>
 void RedBlackTree<T>::insert(T key) {
@@ -42,10 +79,11 @@ Node<T>* RedBlackTree<T>::searchTree(T k) {
         return root;
     }
     while(to_return != nullptr) {
+        std::cout << to_return->getData() << std::endl;
         if (to_return->getData() == k){
             return to_return;
         }
-        to_return = (to_return->getData() > k) ? to_return->getRight() : to_return->getLeft();
+        to_return = (to_return->getData() < k) ? to_return->getRight() : to_return->getLeft();
     }
      return to_return;
 }
@@ -161,3 +199,7 @@ void RedBlackTree<T>::printHelper(Node<T>* node, int depth) {
         printHelper(node->getRight(), depth+1);
     }
 }
+
+
+
+
