@@ -31,6 +31,62 @@ where
     VertexProp: Default + Clone,
     EdgeProp: Default + Clone,
 {
+    fn a_star<W>(
+        &mut self,
+        start: i32,
+        goal: i32,
+        h: fn(i32) -> W,
+        w: fn(EdgeProp) -> W,
+    ) -> (Vec<i32>, W)
+    where
+        W: Num + Ord + Copy,
+    {
+        let mut openSet: BinaryHeap<Reverse<PrioQDist<W>>> = BinaryHeap::new();
+        let mut inOpenSet: HashSet<i32> = HashSet::new(); // Just to keep track of what is in the priority queue. There should be a way to do this without this
+        let mut cameFrom: HashSet<i32> = HashSet::new();
+        let mut gScore: HashMap<i32, W> = HashMap::new();
+        let mut fScore: HashMap<i32, W> = HashMap::new();
+
+        openSet.push(Reverse(PrioQDist {
+            v: start,
+            dist: W::zero(),
+        }));
+        inOpenSet.insert(start);
+        gScore.insert(start, W::zero());
+        fScore.insert(start, h(start));
+
+        let mut path: Vec<i32> = Vec::new();
+        let mut score: W = W::zero();
+
+        while let Some(rp) = openSet.pop() {
+            let d: W = rp.0.dist;
+            let v: i32 = rp.0.v;
+            inOpenSet.remove(&v);
+
+            if v == goal {
+                let mut current: i32 = goal;
+                while let Some(prev) = cameFrom.get(&current) {
+                    path.push(current);
+                    current = *prev;
+                }
+                path.push(start);
+                score = *gScore.get(&goal).unwrap();
+            }
+
+            // Loop through neighbors
+            // Not sure how to do this productively. Define
+            let mut temp_vec: Vec<i32> = Vec::new();
+            {
+                let neighbors: &Vec<i32> = self.get_out_egdes(v).unwrap();
+                for n_ref in neighbors {
+                    temp_vec.push(*n_ref)
+                }
+            }
+            for n in temp_vec {}
+        }
+
+        return (path, score);
+    }
     fn dijstra<W>(&mut self, start: i32, goal: Option<i32>, w: fn(EdgeProp) -> W) -> HashMap<i32, W>
     where
         W: Num + Ord + Copy,
@@ -124,6 +180,7 @@ mod tests {
         adjlist.add_edge((4, 5), DefaultEdgeProp { weight: 7 });
         adjlist.add_edge((5, 6), DefaultEdgeProp { weight: 20 });
         adjlist.add_edge((2, 3), DefaultEdgeProp { weight: 10 });
+        adjlist.add_edge((2, 5), DefaultEdgeProp { weight: 2 });
         adjlist.add_edge((3, 6), DefaultEdgeProp { weight: 3 });
 
         let m: HashMap<i32, i32> = adjlist.dijstra(1, Some(6), |e: DefaultEdgeProp| e.weight);
