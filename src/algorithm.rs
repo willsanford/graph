@@ -9,13 +9,6 @@ use std::collections::BinaryHeap;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-enum ShortestPathAlg {
-    Dijksra,
-    AStar,
-    BellmanFord,
-    Thorup,
-}
-
 // Structure for Dijkstra priority queue
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 struct PrioQDist<T>
@@ -43,7 +36,7 @@ where
     {
         let mut openSet: BinaryHeap<Reverse<PrioQDist<W>>> = BinaryHeap::new();
         let mut inOpenSet: HashSet<i32> = HashSet::new(); // Just to keep track of what is in the priority queue. There should be a way to do this without this
-        let mut cameFrom: HashSet<i32> = HashSet::new();
+        let mut cameFrom: HashMap<i32, i32> = HashMap::new();
         let mut gScore: HashMap<i32, W> = HashMap::new();
         let mut fScore: HashMap<i32, W> = HashMap::new();
 
@@ -70,9 +63,11 @@ where
                     current = *prev;
                 }
                 path.push(start);
+                path.reverse();
                 score = *gScore.get(&goal).unwrap();
             }
 
+            let score: W = *gScore.get(&v).unwrap();
             // Loop through neighbors
             // Not sure how to do this productively. Define
             let mut temp_vec: Vec<i32> = Vec::new();
@@ -82,7 +77,27 @@ where
                     temp_vec.push(*n_ref)
                 }
             }
-            for n in temp_vec {}
+            for n in temp_vec {
+                let ep: EdgeProp = self.e_map.get(&(v, n)).unwrap().clone();
+                let tentative_score: W = score + w(ep);
+                let check = match gScore.get(&n) {
+                    Some(v) => tentative_score < *v,
+                    None => true,
+                };
+                if check {
+                    cameFrom.insert(n, v);
+                    gScore.insert(n, tentative_score);
+                    let temp_f_score: W = tentative_score + h(n);
+                    fScore.insert(n, temp_f_score);
+                    if !inOpenSet.contains(&n) {
+                        openSet.push(Reverse(PrioQDist {
+                            v: n,
+                            dist: temp_f_score,
+                        }));
+                        inOpenSet.insert(n);
+                    }
+                }
+            }
         }
 
         return (path, score);
@@ -198,5 +213,30 @@ mod tests {
         }
 
         assert!(true);
+    }
+
+    #[test]
+    fn a_star_test() {
+        let mut adjlist: AdjList<DefaultVertexProp, DefaultEdgeProp> = AdjList::new();
+        adjlist.directed = true;
+        //   1 ---(w:2)--- 2 ---(w:10)--- 3
+        //   -             -              -
+        // (w:3)         (w:2)          (w:3)
+        //   -             -              -
+        //   4 ---(w:7)--- 5 ---(w:20)--- 6
+
+        adjlist.add_edge((1, 2), DefaultEdgeProp { weight: 2 });
+        adjlist.add_edge((1, 4), DefaultEdgeProp { weight: 3 });
+        adjlist.add_edge((4, 5), DefaultEdgeProp { weight: 7 });
+        adjlist.add_edge((5, 6), DefaultEdgeProp { weight: 20 });
+        adjlist.add_edge((2, 3), DefaultEdgeProp { weight: 10 });
+        adjlist.add_edge((2, 5), DefaultEdgeProp { weight: 2 });
+        adjlist.add_edge((3, 6), DefaultEdgeProp { weight: 3 });
+
+        let (path, path_w): (Vec<i32>, i32) =
+            adjlist.a_star(1, 6, |_| 0, |e: DefaultEdgeProp| e.weight);
+
+        assert_eq!(path, vec![1, 2, 3, 6]);
+        assert_eq!(path_w, 15);
     }
 }
